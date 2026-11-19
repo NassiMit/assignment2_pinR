@@ -51,7 +51,7 @@ head(t.statistic)
 
 # Question 2 
 
-# Power is the probability of not rejecting the null hypothesis when it is false 
+# Power is the probability of rejecting the null hypothesis when it is false 
 # power of test = (1 minus Type II error probability)
 
 # So our idea is to calculate: 
