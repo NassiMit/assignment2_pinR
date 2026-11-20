@@ -18,7 +18,7 @@ dim(dat_lab)
 
 # use max function to select the latest observation 
 # after grouping by patient, admission and labname and select the 
-dat_time <- dat_lab |> 
+dat_time<- dat_lab |> 
   group_by(PatientID, AdmissionID, LabName) |>
   filter(LabDateTime == max(LabDateTime)) |>
   ungroup()
@@ -29,7 +29,7 @@ unique_obs_before <- dat_lab |>
   unique() |> 
   nrow()
 
-unique_obs_after <- nrow(select_time)
+unique_obs_after <- nrow(dat_time)
 
 all.equal(unique_obs_before, unique_obs_after)
 
@@ -146,7 +146,8 @@ clean_names <- function(x) {
   x |>
     gsub(pattern = " ", replacement = "_") |> 
     gsub(pattern = ":", replacement = "") |> 
-    gsub(pattern = "-", replacement = "_")
+    gsub(pattern = "-", replacement = "_")|>
+    gsub(pattern = "/", replacement = "_")
 }
 
 # lets clean the names of column LabName: 
