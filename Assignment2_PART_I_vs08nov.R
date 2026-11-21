@@ -160,7 +160,7 @@ head(data3$LabName)
 # patient has 
 
 data4 <- data3 |> 
-  select(-LabUnits, -LabDateTime) |> 
+  select(-LabUnits, -LabDateTime) |> # remove units and dates/times so each patient gets only 1 row
   pivot_wider(
     names_from = LabName,
     values_from = LabValue
@@ -177,14 +177,13 @@ data4 <- data3 |>
 
 # Step 1: We first check the format of date variables 
 
-# Step 2: We alculate patient age at admission
+# Step 2: We calculate patient age at admission
 #We use a time interval from birth date to admission start date using interval() to get a numeric value
 
 # Step 3: We calculate length of stay (LOS)
 # We use a time interval from admission start date to admission end date using interval() to get a numeric value
 
-# Step 4: Verify calculations
-# We use summary() to check for negative values, NAs, or unrealistic numbers
+# Step 4: We use summary() to check for negative values, NAs, or unrealistic numbers
 
 data5 <- data4 |> 
   mutate(
@@ -198,11 +197,27 @@ summary(data5$LOS)
 
 
 
-
-
 # 8. Create a new dataset with all unnecessary variables removed, only keep those relevant to the analysis
 # described in the next points.
-# 1
+
+# PSEUDOCODE for selecting relevant variables
+# Step 1: We see that for the next points we will need the following variables: age, LOS, race(PatientRace), gender (PatientGender), lab values, We also keep ID
+
+
+# Step 2: # We use select() to keep only the necessary variables
+
+relev_var <- data5 |> 
+  select(
+    ID, outcome, age, LOS, PatientGender, PatientRace,
+    CBC_ABSOLUTE_NEUTROPHILS:URINALYSIS_SPECIFIC_GRAVITY # select all columns from the first lab test to the last one
+  )
+
+dim(relev_var)
+
+
+
+
+
 # 9. Report descriptive analyses (mean, median, SD, IQR, min, max, boxplots) on and test whether there is
 # a difference in age between cases and controls. Do the same for LOS.
 # 10. Report a table with counts of cases and controls across the sex categories and race categories. Perform
