@@ -121,6 +121,10 @@ sapply(list(dat_pts, dat_admis, dat_diag, dat_lab), dim)
   # it assigns 1 to the new variable outcome. Otherwise, it assigns 0. 
   data1 <- complete |> 
     mutate(outcome = ifelse(str_detect(str_to_lower(PrimaryDiagnosisDescription), "malignant neoplasm"), 1, 0))
+  
+  data1 <- data1 |> 
+    mutate(outcome_f = factor(outcome, levels = c(0, 1), labels = c("Control", "Case"))) # give names to the factors
+  
 View(data1)
   dim(data1)
   
@@ -208,7 +212,7 @@ summary(data5$LOS)
 
 relev_var <- data5 |> 
   select(
-    ID, outcome, age, LOS, PatientGender, PatientRace,
+    ID, outcome, outcome_f,age, LOS, PatientGender, PatientRace,
     CBC_ABSOLUTE_NEUTROPHILS:URINALYSIS_SPECIFIC_GRAVITY # select all columns from the first lab test to the last one
   )
 
@@ -218,8 +222,92 @@ dim(relev_var)
 
 
 
-# 9. Report descriptive analyses (mean, median, SD, IQR, min, max, boxplots) on and test whether there is
-# a difference in age between cases and controls. Do the same for LOS.
+# 9. Report descriptive analyses (mean, median, SD, IQR, min, max, boxplots) on and test whether there is a difference in age between cases and controls. Do the same for LOS..
+
+
+# PSEUDOCODE for comparing age and LOS between Cases and Controls
+
+# Step 1: We create a summary table with mean, sd, median, IQR,, min, max for age and LOS
+# 
+# Step 2: We run t.test() and wilcox.test(). Due to the large sample size (N = 10,000), we can safely run a t.test(). However, we also performed a wilcox.test() to ensure robustness against skewness and outliers.
+# Step 3: We created the boxplots
+
+
+
+# Step 1
+table9 <- relev_var |>
+  group_by(outcome_f) |> # divide the dataset into Control and Case groups to use them in summarise()
+  summarise(
+    n          = n(),                         
+    age_mean   = mean(age, na.rm = TRUE),     
+    age_sd     = sd(age, na.rm = TRUE),       
+    age_median = median(age, na.rm = TRUE),   
+    age_iqr    = IQR(age, na.rm = TRUE),      
+    age_min    = min(age, na.rm = TRUE),      
+    age_max    = max(age, na.rm = TRUE),      
+    los_mean   = mean(LOS, na.rm = TRUE),     
+    los_sd     = sd(LOS, na.rm = TRUE),       
+    los_median = median(LOS, na.rm = TRUE),   
+    los_iqr    = IQR(LOS, na.rm = TRUE),      
+    los_min    = min(LOS, na.rm = TRUE),      
+    los_max    = max(LOS, na.rm = TRUE)       
+  )
+print(table9, width = Inf) 
+
+# Step 2. Hypothesis tests for age : Null hypothesis: There are no differences between Cases and Control 
+t.test(age ~ outcome_f, data = relev_var) 
+wilcox.test(age ~ outcome_f, data = relev_var) 
+
+#Hypothesis tests for LOS : Null hypothesis: There are no differences between Cases and Control
+
+t.test(LOS ~ outcome_f, data = relev_var)      # parametric test comparing mean LOS
+wilcox.test(LOS ~ outcome_f, data = relev_var) # non-parametric test comparing LOS distributions
+
+# 9.3.Boxplots
+par(mfrow = c(1, 2)) # split plot area into 1 row and 2 columns
+boxplot(age ~ outcome_f, data = relev_var,
+        main = "Age by Outcome", xlab = "", ylab = "Age (years)",
+        col = c("lightblue", "salmon")) # boxplot comparing age between Control and Case
+boxplot(LOS ~ outcome_f, data = relev_var,
+        main = "Length of Stay by Outcome", xlab = "", ylab = "LOS (days)",
+        col = c("lightblue", "salmon")) # boxplot comparing LOS between Control and Case
+par(mfrow = c(1, 1)) # reset plot area back to a single plot
+
+
+
+
+
+# 10. Contingency tables and chi-square tests for Gender and Race ----
+
+# PSEUDOCODE for comparing Gender and Race proportions between cases and controls
+# Step 1: Analyze PatientGender vs Outcome
+# Build a 2x2 frequency table using table()
+# Calculate column percentages using prop.table(..., margin = 2)
+# Run chisq.test() to check if case/control proportions differ by sex
+# Step 2: Analyze PatientRace vs Outcome
+# Build a frequency table for race vs outcome
+# Calculate column percentages
+# Set a random seed with set.seed() for reproducibility
+# Run chisq.test(..., simulate.p.value = TRUE) to avoid warnings from small race counts
+
+# 10.1. Gender vs. Outcome
+tab_sex <- table(Sex = relev_var$PatientGender, Outcome = relev_var$outcome_f) # count patients by sex and outcome
+tab_sex                                                                        # display raw counts
+round(prop.table(tab_sex, margin = 2) * 100, 1)                                # show column percentages (rounded to 1 decimal)
+chisq.test(tab_sex)                                                            # chi-square test of independence
+
+# 10.2. Race vs. Outcome
+tab_race <- table(Race = relev_var$PatientRace, Outcome = relev_var$outcome_f) # count patients by race and outcome
+tab_race                                                                       # display raw counts
+round(prop.table(tab_race, margin = 2) * 100, 1)                               # show column percentages (rounded to 1 decimal)
+
+set.seed(123)                                                                  # fix random seed so simulated p-value is reproducible
+chisq.test(tab_race, simulate.p.value = TRUE)                                  # chi-square test with Monte Carlo simulation
+
+
+
+
+
 # 10. Report a table with counts of cases and controls across the sex categories and race categories. Perform
 # tests on differences in counts (hint: first use table()).
 # 11. Make boxplots of the lab values comparing cases and controls. Put the boxplots in one figure.
