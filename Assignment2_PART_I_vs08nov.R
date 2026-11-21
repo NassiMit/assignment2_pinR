@@ -159,17 +159,47 @@ head(data3$LabName)
 # the result is a dataset with a column per exame, so we can see all the exams that each
 # patient has 
 
-data4 <- pivot_wider(data3,
-  names_from = LabName,
-  values_from = LabValue
-)
-View(data4)
+data4 <- data3 |> 
+  select(-LabUnits, -LabDateTime) |> 
+  pivot_wider(
+    names_from = LabName,
+    values_from = LabValue
+  )
 
 
 # 7. Calculate the patient age in years and length of stay (LOS). The length of stay is defined as
 # the duration from admission start to end in days. You may use lubridate::interval and
 # lubridate::dyears/ddays, e.g. something like LOS = interval(start date, end date)/ddays(1)
 # to get a numeric value for the number of days.
+
+
+# PSEUDOCODE for calculating patient age in years and length of stay (LOS)
+
+# Step 1: We first check the format of date variables 
+
+# Step 2: We alculate patient age at admission
+#We use a time interval from birth date to admission start date using interval() to get a numeric value
+
+# Step 3: We calculate length of stay (LOS)
+# We use a time interval from admission start date to admission end date using interval() to get a numeric value
+
+# Step 4: Verify calculations
+# We use summary() to check for negative values, NAs, or unrealistic numbers
+
+data5 <- data4 |> 
+  mutate(
+    age = interval(PatientDateOfBirth, AdmissionStartDate) / dyears(1), # age at admission in years
+    LOS = interval(AdmissionStartDate, AdmissionEndDate) / ddays(1)     # length of hospital stay in days
+  )
+
+summary(data5$age)
+summary(data5$LOS)
+
+
+
+
+
+
 # 8. Create a new dataset with all unnecessary variables removed, only keep those relevant to the analysis
 # described in the next points.
 # 1
