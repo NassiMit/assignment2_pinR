@@ -1,5 +1,6 @@
 # Programming in R Assignment 2 
 library(tidyverse)
+set.seed(3)
 
 # Information about the dataset ----
   # dat_diag is AdmissionsDiagnosesCorePopulatedTable
@@ -227,10 +228,11 @@ dim(relev_var)
 
 # PSEUDOCODE for comparing age and LOS between Cases and Controls
 
-# Step 1: We create a summary table with mean, sd, median, IQR,, min, max for age and LOS
+# Step 1: We create a summary table with mean, sd, median, IQR, min, max for age and LOS
 # 
 # Step 2: We run t.test() and wilcox.test(). Due to the large sample size (N = 10,000), we can safely run a t.test(). However, we also performed a wilcox.test() to ensure robustness against skewness and outliers.
 # Step 3: We created the boxplots
+# Step 4: We report descriptive analyses and tests results
 
 
 
@@ -254,16 +256,17 @@ table9 <- relev_var |>
   )
 print(table9, width = Inf) 
 
-# Step 2. Hypothesis tests for age : Null hypothesis: There are no differences between Cases and Control 
+# Step 2.
+#Hypothesis tests for age : Null hypothesis: There is no difference in age between Cases and Controls 
 t.test(age ~ outcome_f, data = relev_var) 
 wilcox.test(age ~ outcome_f, data = relev_var) 
 
-#Hypothesis tests for LOS : Null hypothesis: There are no differences between Cases and Control
+#Hypothesis tests for LOS : Null hypothesis: There is no difference in LOS) between Cases and Controls
 
 t.test(LOS ~ outcome_f, data = relev_var)      # parametric test comparing mean LOS
 wilcox.test(LOS ~ outcome_f, data = relev_var) # non-parametric test comparing LOS distributions
 
-# 9.3.Boxplots
+# Step 3. Boxplots
 par(mfrow = c(1, 2)) # split plot area into 1 row and 2 columns
 boxplot(age ~ outcome_f, data = relev_var,
         main = "Age by Outcome", xlab = "", ylab = "Age (years)",
@@ -273,22 +276,33 @@ boxplot(LOS ~ outcome_f, data = relev_var,
         col = c("lightblue", "salmon")) # boxplot comparing LOS between Control and Case
 par(mfrow = c(1, 1)) # reset plot area back to a single plot
 
+# Step 4 
+# Report 
+# Sample size: Out of 10,000 patients, there are 8,602 Controls (86.0%) and 1,398 Cases (14.0%).
+
+# Age: Controls had a mean of 23.1 and SD of 2.87, median 23.1 and IQR 4.91 years (range: 18.0 - 28.0),
+# while Cases had a mean of 23.2 and SD 2.81 and median of 23.1 and 4.87 years (range: 18.0 - 28.0).
+# Both t.test (p = 0.2054) and wilcox.test (p = 0.2221) have p > 0.05, so the null hypothesis cannot be rejected for age. We can say that 
+# there is no statistically significant difference in age between Cases and Controls.
+
+# LOS: Controls had a mean of 10.9 and SD of 5.18 and median (IQR) of 10.9 (9.00) days (range: 2.01 - 20.0),
+# while Cases had a mean of 10.9 and SD 5.25, median of 10.8 and (IQR) 8.98 days (range: 2.06 - 20.0).
+# Both t.test (p = 0.6625) and wilcox.test (p = 0.6554) have p > 0.05, so again the null hypothesis cannot be rejected. No statistically significant difference in LOS between Cases and Controls.
 
 
 
 
-# 10. Contingency tables and chi-square tests for Gender and Race ----
 
-# PSEUDOCODE for comparing Gender and Race proportions between cases and controls
-# Step 1: Analyze PatientGender vs Outcome
-# Build a 2x2 frequency table using table()
-# Calculate column percentages using prop.table(..., margin = 2)
-# Run chisq.test() to check if case/control proportions differ by sex
-# Step 2: Analyze PatientRace vs Outcome
-# Build a frequency table for race vs outcome
-# Calculate column percentages
-# Set a random seed with set.seed() for reproducibility
-# Run chisq.test(..., simulate.p.value = TRUE) to avoid warnings from small race counts
+
+
+
+
+
+
+
+# 10. Report a table with counts of cases and controls across the sex categories and race categories. Perform tests on differences in counts (hint: first use table()).
+
+
 
 # 10.1. Gender vs. Outcome
 tab_sex <- table(Sex = relev_var$PatientGender, Outcome = relev_var$outcome_f) # count patients by sex and outcome
@@ -308,8 +322,7 @@ chisq.test(tab_race, simulate.p.value = TRUE)                                  #
 
 
 
-# 10. Report a table with counts of cases and controls across the sex categories and race categories. Perform
-# tests on differences in counts (hint: first use table()).
+
 # 11. Make boxplots of the lab values comparing cases and controls. Put the boxplots in one figure.
 # 12. Using words, describe any remarkable patterns in the dataset in terms of normality of the distribution,
 # skewness, missingness, rare categories, outliers.
